@@ -1,1 +1,6 @@
+# pnpm dependencies
 node_modules
+
+# typescript related
+dist
+tsconfig.tsbuildinfo

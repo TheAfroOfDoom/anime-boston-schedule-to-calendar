@@ -7,8 +7,14 @@
 		"pnpm": "8.15.5"
 	},
 	"main": "index.js",
-	"scripts": {},
+	"scripts": {
+		"build": "tsc",
+		"watch": "pnpm run build -w"
+	},
 	"keywords": [],
 	"author": "",
-	"license": "MPL-2.0"
+	"license": "MPL-2.0",
+	"devDependencies": {
+		"typescript": "5.4.3"
+	}
 }
