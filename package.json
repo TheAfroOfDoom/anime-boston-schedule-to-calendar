@@ -9,12 +9,14 @@
 	"main": "index.js",
 	"scripts": {
 		"build": "tsc",
+		"format": "prettier .",
 		"watch": "pnpm run build -w"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "MPL-2.0",
 	"devDependencies": {
+		"prettier": "3.2.5",
 		"typescript": "5.4.3"
 	}
 }
