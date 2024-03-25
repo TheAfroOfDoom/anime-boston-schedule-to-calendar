@@ -1,7 +1,12 @@
 {
   "folders": [
     {
-      "path": "."
-    }
-  ]
+      "path": ".",
+    },
+  ],
+  "settings": {
+    "editor.detectIndentation": false,
+    "editor.insertSpaces": false,
+    "editor.tabSize": 2,
+  },
 }
