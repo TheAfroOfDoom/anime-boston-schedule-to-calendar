@@ -18,11 +18,15 @@
 	"author": "",
 	"license": "MPL-2.0",
 	"devDependencies": {
+		"@types/jsdom": "21.1.6",
 		"@typescript-eslint/eslint-plugin": "7.3.1",
 		"@typescript-eslint/parser": "7.3.1",
 		"eslint": "8.57.0",
 		"prettier": "3.2.5",
 		"typescript": "5.4.3",
 		"typescript-eslint": "7.3.1"
+	},
+	"dependencies": {
+		"jsdom": "24.0.0"
 	}
 }
