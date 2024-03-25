@@ -1,0 +1,14 @@
+{
+	"name": "anime-boston-calendar",
+	"version": "0.1.0",
+	"description": "",
+	"engines": {
+		"node": "18.17.1",
+		"pnpm": "8.15.5"
+	},
+	"main": "index.js",
+	"scripts": {},
+	"keywords": [],
+	"author": "",
+	"license": "MPL-2.0"
+}
