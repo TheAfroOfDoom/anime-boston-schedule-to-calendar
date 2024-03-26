@@ -111,7 +111,7 @@ const parseEventEndTime = ({
 	return times[endRowIdx];
 };
 
-type Event = {
+type EventPartial = {
 	name: string;
 	timeStart: string;
 	timeEnd: string;
@@ -119,8 +119,12 @@ type Event = {
 	url: string;
 };
 
-type EventMap = {
-	[name: string]: Event;
+type Event = EventPartial & {
+	description: string;
+};
+
+type EventPartialMap = {
+	[name: string]: EventPartial;
 };
 
 const parseEvents = ({
@@ -131,8 +135,8 @@ const parseEvents = ({
 	locations: string[];
 	table: HTMLTableElement;
 	times: string[];
-}): EventMap => {
-	const eventMap: EventMap = {};
+}): EventPartialMap => {
+	const eventMap: EventPartialMap = {};
 
 	const normalizedTable = normalizeHtmlTable(table);
 
@@ -170,7 +174,7 @@ const parseEvents = ({
 				columnIdx,
 			});
 
-			const event: Event = {
+			const event: EventPartial = {
 				name: eventString,
 				timeStart: times[rowIdx],
 				timeEnd,
@@ -208,8 +212,34 @@ const main = async () => {
 	if (!(fridaySchedule instanceof HTMLTableElement)) {
 		throw new Error("Schedule table didn't return <table> element");
 	}
-	const eventMap = parseEvents({ table: fridaySchedule, locations, times });
-	const events = Object.values(eventMap);
+	const eventPartialMap = parseEvents({
+		table: fridaySchedule,
+		locations,
+		times,
+	});
+	const partialEvents = Object.values(eventPartialMap);
+	console.log(`Parsed ${partialEvents.length} events from schedule table`);
+
+	const events: Event[] = [];
+	for (const event of partialEvents) {
+		console.log(
+			`Fetching description for event: '${event.name}' at URL: '${event.url}'`,
+		);
+		const response = await fetch(event.url);
+		const html = await response.text();
+		const eventDom = new JSDOM(html);
+		const { document } = eventDom.window;
+		const description = document.querySelector(
+			"div.page-body > p:nth-child(4)",
+		)?.textContent;
+		if (description == null) {
+			throw new Error(`Failed to fetch description for event: ${event.name}`);
+		}
+		events.push({
+			...event,
+			description,
+		});
+	}
 
 	console.log({
 		events,
