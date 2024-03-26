@@ -1,3 +1,5 @@
+import { writeFileSync } from "fs";
+import ical, { ICalCalendarMethod } from "ical-generator";
 import { JSDOM } from "jsdom";
 import normalizeHtmlTable from "@eirikb/normalize-html-table";
 
@@ -209,6 +211,30 @@ const parseEvents = ({
 	return eventMap;
 };
 
+const exportToICalCalendar = async (events: Event[]): Promise<void> => {
+	const path = "./exportedCalendar.ical";
+	console.log(`Exporting calendar to '${path}'`);
+
+	const calendar = ical({
+		name: "Anime Boston Calendar",
+		method: ICalCalendarMethod.PUBLISH,
+	});
+	for (const event of events) {
+		calendar.createEvent({
+			start: event.timeStart,
+			end: event.timeEnd,
+			summary: event.name,
+			description: event.description,
+			location: event.location,
+			url: event.url,
+		});
+	}
+
+	await writeFileSync(path, calendar.toString(), { flag: "w" });
+
+	console.log("Finished exporting");
+};
+
 const main = async () => {
 	const scheduleUrl = `${baseUrl}/schedule/index/2024`;
 	const response = await fetch(scheduleUrl);
@@ -270,9 +296,7 @@ const main = async () => {
 		}
 	}
 
-	console.log({
-		events,
-	});
+	await exportToICalCalendar(events);
 };
 
 main();
