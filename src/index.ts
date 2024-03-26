@@ -1,6 +1,8 @@
 import { JSDOM } from "jsdom";
 import normalizeHtmlTable from "@eirikb/normalize-html-table";
 
+const baseUrl = "https://www.animeboston.com";
+
 const parseLocations = (
 	buildingRow: HTMLTableRowElement,
 	roomRow: HTMLTableRowElement,
@@ -70,6 +72,20 @@ const getEventText = (
 	return eventElement.getAttribute("title") ?? "";
 };
 
+const getEventUrl = (eventElement: HTMLTableCellElement): string => {
+	const onclick = eventElement.getAttribute("onclick");
+	if (onclick == null) {
+		throw new Error("Event didn't have `onclick` attribute");
+	}
+
+	// URL is in single-quotes in the onclick string
+	const url = onclick.split("'")[1];
+	if (!url.includes("/schedule/")) {
+		throw new Error(`URL had unexpected format: ${url}`);
+	}
+	return url;
+};
+
 const parseEventEndTime = ({
 	eventArray,
 	times,
@@ -100,6 +116,7 @@ type Event = {
 	timeStart: string;
 	timeEnd: string;
 	location: string;
+	url: string;
 };
 
 type EventMap = {
@@ -158,6 +175,7 @@ const parseEvents = ({
 				timeStart: times[rowIdx],
 				timeEnd,
 				location: locations[columnIdx + 1],
+				url: `${baseUrl}${getEventUrl(eventElement)}`,
 			};
 			eventMap[eventString] = event;
 		}
@@ -168,7 +186,7 @@ const parseEvents = ({
 };
 
 const main = async () => {
-	const scheduleUrl = "https://www.animeboston.com/schedule/index/2024";
+	const scheduleUrl = `${baseUrl}/schedule/index/2024`;
 	const response = await fetch(scheduleUrl);
 	const text = await response.text();
 
