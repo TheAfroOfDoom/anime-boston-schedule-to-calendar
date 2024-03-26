@@ -39,23 +39,43 @@ const parseLocations = (
 	return columns;
 };
 
-const parseTimes = (eventRows: HTMLTableRowElement[]) => {
+/** Returns a new date object */
+const addHours = (hourString: string, date: Date): Date => {
+	const [hoursString, minutesString, am] = hourString.split(/[: ]/);
+
+	const minutes = Number(minutesString);
+	let hours = Number(hoursString);
+	if (am.toLowerCase() === "pm") {
+		hours += 12;
+	} else {
+		// If this is an AM time before 8:00 am, its actually the next day
+		if (hours < 8) {
+			hours += 24;
+		}
+	}
+
+	const newDate = new Date(date);
+	newDate.setHours(hours, Number(minutes), 0, 0);
+	return newDate;
+};
+
+const parseTimes = (eventRows: HTMLTableRowElement[], date: Date) => {
 	const times = eventRows.map((eventRow) => {
 		const time = eventRow.querySelector("th.schedule-time")?.textContent;
 		if (time == null) {
 			throw new Error("Failed to parse time from first column");
 		}
-		return time;
+		return addHours(time, date);
 	});
 
 	// Add extra row at end for `Event.timeEnd` property
 	// e.g. if `schedule-table` goes up to 1:45 AM, we add 2:00 AM
 	// TODO: this shouldn't be hardcoded probably
-	const lastTime = times.at(-1);
-	if (lastTime === "1:45 am") {
-		times.push("2:00 am");
-	} else if (lastTime === "4:45 pm") {
-		times.push("5:00 pm");
+	const lastTime = times.at(-1)!.getTime();
+	if (lastTime === addHours("1:45 am", date).getTime()) {
+		times.push(addHours("2:00 am", date));
+	} else if (lastTime === addHours("4:45 pm", date).getTime()) {
+		times.push(addHours("5:00 pm", date));
 	} else {
 		throw new Error(`New final time seen: ${lastTime}`);
 	}
@@ -93,10 +113,10 @@ const parseEventEndTime = ({
 	columnIdx,
 }: {
 	eventArray: HTMLTableCellElement[][];
-	times: string[];
+	times: Date[];
 	rowIdx: number;
 	columnIdx: number;
-}) => {
+}): Date => {
 	let endRowIdx = rowIdx;
 	const initialEventText = getEventText(eventArray[rowIdx][columnIdx]);
 	if (initialEventText == null) {
@@ -113,8 +133,8 @@ const parseEventEndTime = ({
 
 type EventPartial = {
 	name: string;
-	timeStart: string;
-	timeEnd: string;
+	timeStart: Date;
+	timeEnd: Date;
 	location: string;
 	url: string;
 };
@@ -134,7 +154,7 @@ const parseEvents = ({
 }: {
 	locations: string[];
 	table: HTMLTableElement;
-	times: string[];
+	times: Date[];
 }): EventPartialMap => {
 	const eventMap: EventPartialMap = {};
 
@@ -202,6 +222,7 @@ const main = async () => {
 
 	const events: Event[] = [];
 	for (const [date, scheduleTable] of [
+		// These dates **need** to be at T00:00:00 for this script to export calendar events correctly
 		[new Date("2024-03-29Z-04:00"), fridaySchedule],
 		[new Date("2024-03-30Z-04:00"), saturdaySchedule],
 		[new Date("2024-03-31Z-04:00"), sundaySchedule],
@@ -213,7 +234,7 @@ const main = async () => {
 
 		const locations = parseLocations(buildingRow, roomRow);
 
-		const times = parseTimes(eventRows);
+		const times = parseTimes(eventRows, date);
 
 		if (!(scheduleTable instanceof HTMLTableElement)) {
 			throw new Error("Schedule table didn't return <table> element");
