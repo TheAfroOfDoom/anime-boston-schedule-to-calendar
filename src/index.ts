@@ -200,45 +200,53 @@ const main = async () => {
 	const scheduleTables = document.querySelectorAll("table.schedule-table");
 	const [fridaySchedule, saturdaySchedule, sundaySchedule] = scheduleTables;
 
-	// Ignore last 2 rows -- they are duplicates
-	const [buildingRow, roomRow, ...eventRows] = Array.from(
-		fridaySchedule.querySelectorAll("tr"),
-	).slice(0, -2);
-
-	const locations = parseLocations(buildingRow, roomRow);
-
-	const times = parseTimes(eventRows);
-
-	if (!(fridaySchedule instanceof HTMLTableElement)) {
-		throw new Error("Schedule table didn't return <table> element");
-	}
-	const eventPartialMap = parseEvents({
-		table: fridaySchedule,
-		locations,
-		times,
-	});
-	const partialEvents = Object.values(eventPartialMap);
-	console.log(`Parsed ${partialEvents.length} events from schedule table`);
-
 	const events: Event[] = [];
-	for (const event of partialEvents) {
-		console.log(
-			`Fetching description for event: '${event.name}' at URL: '${event.url}'`,
-		);
-		const response = await fetch(event.url);
-		const html = await response.text();
-		const eventDom = new JSDOM(html);
-		const { document } = eventDom.window;
-		const description = document.querySelector(
-			"div.page-body > p:nth-child(4)",
-		)?.textContent;
-		if (description == null) {
-			throw new Error(`Failed to fetch description for event: ${event.name}`);
+	for (const [date, scheduleTable] of [
+		[new Date("2024-03-29Z-04:00"), fridaySchedule],
+		[new Date("2024-03-30Z-04:00"), saturdaySchedule],
+		[new Date("2024-03-31Z-04:00"), sundaySchedule],
+	] as const) {
+		// Ignore last 2 rows -- they are duplicates
+		const [buildingRow, roomRow, ...eventRows] = Array.from(
+			scheduleTable.querySelectorAll("tr"),
+		).slice(0, -2);
+
+		const locations = parseLocations(buildingRow, roomRow);
+
+		const times = parseTimes(eventRows);
+
+		if (!(scheduleTable instanceof HTMLTableElement)) {
+			throw new Error("Schedule table didn't return <table> element");
 		}
-		events.push({
-			...event,
-			description,
+		const eventPartialMap = parseEvents({
+			table: scheduleTable,
+			locations,
+			times,
 		});
+		const partialEvents = Object.values(eventPartialMap);
+		console.log(
+			`Parsed ${partialEvents.length} events from ${date.toDateString()} schedule table`,
+		);
+
+		for (const event of partialEvents) {
+			console.log(
+				`Fetching description for event: '${event.name}' at URL: '${event.url}'`,
+			);
+			const response = await fetch(event.url);
+			const html = await response.text();
+			const eventDom = new JSDOM(html);
+			const { document } = eventDom.window;
+			const description = document.querySelector(
+				"div.page-body > p:nth-child(4)",
+			)?.textContent;
+			if (description == null) {
+				throw new Error(`Failed to fetch description for event: ${event.name}`);
+			}
+			events.push({
+				...event,
+				description,
+			});
+		}
 	}
 
 	console.log({
