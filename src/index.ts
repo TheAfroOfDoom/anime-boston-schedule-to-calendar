@@ -254,11 +254,13 @@ const fetchScheduleTables = async (): Promise<HTMLTableElement[]> => {
 	return Array.from(scheduleTables) as HTMLTableElement[];
 };
 
-const main = async () => {
-	const [fridaySchedule, saturdaySchedule, sundaySchedule] =
-		await fetchScheduleTables();
-
+const parseScheduleTables = async (
+	scheduleTables: HTMLTableElement[],
+): Promise<Event[]> => {
 	const events: Event[] = [];
+
+	const [fridaySchedule, saturdaySchedule, sundaySchedule] = scheduleTables;
+
 	for (const [date, scheduleTable] of [
 		// These dates **need** to be at T00:00:00 for this script to export calendar events correctly
 		[new Date("2024-03-29Z-04:00"), fridaySchedule],
@@ -304,6 +306,14 @@ const main = async () => {
 			});
 		}
 	}
+
+	return events;
+};
+
+const main = async () => {
+	const scheduleTables = await fetchScheduleTables();
+
+	const events = await parseScheduleTables(scheduleTables);
 
 	await exportToICalCalendar(events);
 };
