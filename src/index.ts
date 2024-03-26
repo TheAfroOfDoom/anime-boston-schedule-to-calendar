@@ -38,13 +38,52 @@ const parseLocations = (
 };
 
 const parseTimes = (eventRows: HTMLTableRowElement[]) => {
-	return eventRows.map((eventRow) => {
+	const times = eventRows.map((eventRow) => {
 		const time = eventRow.querySelector("th.schedule-time")?.textContent;
 		if (time == null) {
 			throw new Error("Failed to parse time from first column");
 		}
 		return time;
 	});
+
+	// Add extra row at end for `Event.timeEnd` property
+	// e.g. if `schedule-table` goes up to 1:45 AM, we add 2:00 AM
+	// TODO: this shouldn't be hardcoded probably
+	const lastTime = times.at(-1);
+	if (lastTime === "1:45 am") {
+		times.push("2:00 am");
+	} else if (lastTime === "4:45 pm") {
+		times.push("5:00 pm");
+	} else {
+		throw new Error(`New final time seen: ${lastTime}`);
+	}
+
+	return times;
+};
+
+const parseEventEndTime = ({
+	eventArray,
+	times,
+	rowIdx,
+	columnIdx,
+}: {
+	eventArray: HTMLTableCellElement[][];
+	times: string[];
+	rowIdx: number;
+	columnIdx: number;
+}) => {
+	let endRowIdx = rowIdx;
+	const initialEventText = eventArray[rowIdx][columnIdx].textContent?.trim();
+	if (initialEventText == null) {
+		throw new Error(`Bad event text at [${rowIdx}][${columnIdx}]`);
+	}
+
+	let currentEventText: string | undefined = initialEventText;
+	while (currentEventText === initialEventText) {
+		endRowIdx += 1;
+		currentEventText = eventArray[endRowIdx]?.[columnIdx].textContent?.trim();
+	}
+	return times[endRowIdx];
 };
 
 type Event = {
@@ -98,7 +137,12 @@ const parseEvents = ({
 				continue;
 			}
 
-			const timeEnd = "TODO";
+			const timeEnd = parseEventEndTime({
+				eventArray: normalizedTable,
+				times,
+				rowIdx,
+				columnIdx,
+			});
 
 			const event: Event = {
 				name: eventString,
