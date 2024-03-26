@@ -61,6 +61,15 @@ const parseTimes = (eventRows: HTMLTableRowElement[]) => {
 	return times;
 };
 
+const getEventText = (
+	eventElement: HTMLTableCellElement | undefined,
+): string | undefined => {
+	if (typeof eventElement === "undefined") {
+		return void 0;
+	}
+	return eventElement.getAttribute("title") ?? "";
+};
+
 const parseEventEndTime = ({
 	eventArray,
 	times,
@@ -73,7 +82,7 @@ const parseEventEndTime = ({
 	columnIdx: number;
 }) => {
 	let endRowIdx = rowIdx;
-	const initialEventText = eventArray[rowIdx][columnIdx].textContent?.trim();
+	const initialEventText = getEventText(eventArray[rowIdx][columnIdx]);
 	if (initialEventText == null) {
 		throw new Error(`Bad event text at [${rowIdx}][${columnIdx}]`);
 	}
@@ -81,7 +90,7 @@ const parseEventEndTime = ({
 	let currentEventText: string | undefined = initialEventText;
 	while (currentEventText === initialEventText) {
 		endRowIdx += 1;
-		currentEventText = eventArray[endRowIdx]?.[columnIdx].textContent?.trim();
+		currentEventText = getEventText(eventArray[endRowIdx]?.[columnIdx]);
 	}
 	return times[endRowIdx];
 };
@@ -120,7 +129,7 @@ const parseEvents = ({
 		for (const eventElement of eventRow) {
 			columnIdx += 1;
 
-			const eventString = eventElement.textContent?.trim();
+			const eventString = getEventText(eventElement);
 
 			if (eventString == null) {
 				throw new Error("Event string was null");
@@ -185,7 +194,7 @@ const main = async () => {
 	const events = Object.values(eventMap);
 
 	console.log({
-		events: events.filter((event) => event.name.includes("Persona")),
+		events,
 	});
 };
 
