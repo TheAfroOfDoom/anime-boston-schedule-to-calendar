@@ -52,9 +52,11 @@ const addHours = (hourString: string, date: Date): Date => {
 			hours += 12;
 		}
 	} else {
-		// If this is an AM time before 8:00 am, its actually the next day
+		// If this is an AM time before 8:00 am (or 12:00 am), its actually the next day
 		if (hours < 8) {
 			hours += 24;
+		} else if (hours === 12) {
+			hours += 12;
 		}
 	}
 
