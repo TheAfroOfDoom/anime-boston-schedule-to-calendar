@@ -48,7 +48,9 @@ const addHours = (hourString: string, date: Date): Date => {
 	const minutes = Number(minutesString);
 	let hours = Number(hoursString);
 	if (am.toLowerCase() === "pm") {
-		hours += 12;
+		if (hours < 12) {
+			hours += 12;
+		}
 	} else {
 		// If this is an AM time before 8:00 am, its actually the next day
 		if (hours < 8) {
@@ -57,7 +59,7 @@ const addHours = (hourString: string, date: Date): Date => {
 	}
 
 	const newDate = new Date(date);
-	newDate.setHours(hours, Number(minutes), 0, 0);
+	newDate.setHours(hours, minutes, 0, 0);
 	return newDate;
 };
 
