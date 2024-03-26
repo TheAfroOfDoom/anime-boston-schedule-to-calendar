@@ -193,6 +193,7 @@ const parseEvents = ({
 				continue;
 			}
 
+			const timeStart = times[rowIdx];
 			const timeEnd = parseEventEndTime({
 				eventArray: normalizedTable,
 				times,
@@ -200,9 +201,15 @@ const parseEvents = ({
 				columnIdx,
 			});
 
+			if (timeStart.getTime() > timeEnd.getTime()) {
+				throw new Error(
+					`Event had start time after end time: ${eventString}. start: ${timeStart}, end: ${timeEnd}`,
+				);
+			}
+
 			const event: EventPartial = {
 				name: eventString,
-				timeStart: times[rowIdx],
+				timeStart,
 				timeEnd,
 				location: locations[columnIdx + 1],
 				url: `${baseUrl}${getEventUrl(eventElement)}`,
