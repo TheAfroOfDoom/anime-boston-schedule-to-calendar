@@ -1,6 +1,6 @@
 import { JSDOM } from "jsdom";
 
-const parseColumns = (
+const parseLocations = (
 	buildingRow: HTMLTableRowElement,
 	roomRow: HTMLTableRowElement,
 ) => {
@@ -36,7 +36,7 @@ const parseColumns = (
 	return columns;
 };
 
-const parseRowTimes = (eventRows: HTMLTableRowElement[]) => {
+const parseTimes = (eventRows: HTMLTableRowElement[]) => {
 	return eventRows.map((eventRow) => {
 		const time = eventRow.querySelector("th.schedule-time")?.textContent;
 		if (time == null) {
@@ -62,9 +62,9 @@ const main = async () => {
 		fridaySchedule.querySelectorAll("tr"),
 	).slice(0, -2);
 
-	const columns = parseColumns(buildingRow, roomRow);
+	const locations = parseLocations(buildingRow, roomRow);
 
-	const rows = parseRowTimes(eventRows);
+	const times = parseTimes(eventRows);
 
 	console.log({ rows, columns });
 };
