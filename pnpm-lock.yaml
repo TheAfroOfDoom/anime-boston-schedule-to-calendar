@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@eirikb/normalize-html-table':
+    specifier: 1.1.4
+    version: 1.1.4
   jsdom:
     specifier: 24.0.0
     version: 24.0.0
@@ -38,6 +41,10 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
     dev: true
+
+  /@eirikb/normalize-html-table@1.1.4:
+    resolution: {integrity: sha512-iOvY1+b4NJXBrGibiMUp2LNT3yGm1tDN7rvR81LFo6+kkJXPZFeVfk32Zm/B+Is16UDwf5GxbopzJ1oyk4mKHg==}
+    dev: false
 
   /@eslint-community/eslint-utils@4.4.0(eslint@8.57.0):
     resolution: {integrity: sha512-1/sA4dwrzBAyeUoQ6oxahHKmrZvsnLCg4RfxW3ZFGGmQkSNQPFNLV9CUEFQP1x9EYXHTo5p6xdhZM1Ne9p/AfA==}
