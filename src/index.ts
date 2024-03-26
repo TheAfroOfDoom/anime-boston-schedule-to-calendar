@@ -1,4 +1,5 @@
 import { JSDOM } from "jsdom";
+import normalizeHtmlTable from "@eirikb/normalize-html-table";
 
 const parseLocations = (
 	buildingRow: HTMLTableRowElement,
@@ -46,15 +47,82 @@ const parseTimes = (eventRows: HTMLTableRowElement[]) => {
 	});
 };
 
+type Event = {
+	name: string;
+	timeStart: string;
+	timeEnd: string;
+	location: string;
+};
+
+type EventMap = {
+	[name: string]: Event;
+};
+
+const parseEvents = ({
+	locations,
+	table,
+	times,
+}: {
+	locations: string[];
+	table: HTMLTableElement;
+	times: string[];
+}): EventMap => {
+	const eventMap: EventMap = {};
+
+	const normalizedTable = normalizeHtmlTable(table);
+
+	// Initial row index of the first event row in the table is 2 (the 3rd row)
+	let rowIdx = -1;
+	const initialColumnIdx = -1;
+	let columnIdx = initialColumnIdx;
+
+	for (const eventRow of normalizedTable) {
+		rowIdx += 1;
+		for (const eventElement of eventRow) {
+			columnIdx += 1;
+
+			const eventString = eventElement.textContent?.trim();
+
+			if (eventString == null) {
+				throw new Error("Event string was null");
+			}
+
+			const shouldSkipEvent =
+				// Blank event string means an empty cell on the schedule table
+				eventString === "" ||
+				// If eventString is already a key in eventMap, then this indicates a cell
+				// that is a continuation from an event we've already parsed
+				eventString in eventMap;
+
+			if (shouldSkipEvent) {
+				continue;
+			}
+
+			const timeEnd = "TODO";
+
+			const event: Event = {
+				name: eventString,
+				timeStart: times[rowIdx],
+				timeEnd,
+				location: locations[columnIdx + 1],
+			};
+			eventMap[eventString] = event;
+		}
+		columnIdx = initialColumnIdx;
+	}
+
+	return eventMap;
+};
+
 const main = async () => {
 	const scheduleUrl = "https://www.animeboston.com/schedule/index/2024";
 	const response = await fetch(scheduleUrl);
 	const text = await response.text();
 
 	const dom = new JSDOM(text, { url: scheduleUrl });
-	const { document } = dom.window;
+	const { document, HTMLTableElement } = dom.window;
 
-	const scheduleTables = document.querySelectorAll(".schedule-table tbody");
+	const scheduleTables = document.querySelectorAll("table.schedule-table");
 	const [fridaySchedule, saturdaySchedule, sundaySchedule] = scheduleTables;
 
 	// Ignore last 2 rows -- they are duplicates
@@ -66,7 +134,15 @@ const main = async () => {
 
 	const times = parseTimes(eventRows);
 
-	console.log({ rows, columns });
+	if (!(fridaySchedule instanceof HTMLTableElement)) {
+		throw new Error("Schedule table didn't return <table> element");
+	}
+	const eventMap = parseEvents({ table: fridaySchedule, locations, times });
+	const events = Object.values(eventMap);
+
+	console.log({
+		events: events.filter((event) => event.name.includes("Persona")),
+	});
 };
 
 main();
