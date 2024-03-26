@@ -235,7 +235,7 @@ const exportToICalCalendar = async (events: Event[]): Promise<void> => {
 	console.log("Finished exporting");
 };
 
-const main = async () => {
+const fetchScheduleTables = async (): Promise<HTMLTableElement[]> => {
 	const scheduleUrl = `${baseUrl}/schedule/index/2024`;
 	const response = await fetch(scheduleUrl);
 	const text = await response.text();
@@ -244,7 +244,19 @@ const main = async () => {
 	const { document, HTMLTableElement } = dom.window;
 
 	const scheduleTables = document.querySelectorAll("table.schedule-table");
-	const [fridaySchedule, saturdaySchedule, sundaySchedule] = scheduleTables;
+
+	for (const scheduleTable of scheduleTables) {
+		if (!(scheduleTable instanceof HTMLTableElement)) {
+			throw new Error("Schedule table didn't return <table> element");
+		}
+	}
+
+	return Array.from(scheduleTables) as HTMLTableElement[];
+};
+
+const main = async () => {
+	const [fridaySchedule, saturdaySchedule, sundaySchedule] =
+		await fetchScheduleTables();
 
 	const events: Event[] = [];
 	for (const [date, scheduleTable] of [
@@ -262,9 +274,6 @@ const main = async () => {
 
 		const times = parseTimes(eventRows, date);
 
-		if (!(scheduleTable instanceof HTMLTableElement)) {
-			throw new Error("Schedule table didn't return <table> element");
-		}
 		const eventPartialMap = parseEvents({
 			table: scheduleTable,
 			locations,
